@@ -1,9 +1,10 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Brand } from '../../schema/brand.schema';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { ApiError } from 'src/utils/api-error';
 
 @Injectable()
 export class BrandService {
@@ -16,7 +17,7 @@ export class BrandService {
   async findOne(id: string): Promise<Brand> {
     const brand = this.brandModel.findById(id).exec();
     if (!brand) {
-      throw new NotFoundException(`Product with ID "${id}" not found`);
+      throw new ApiError(`Product with ID "${id}" not found`, 404);
     }
     return brand;
   }
@@ -34,12 +35,16 @@ export class BrandService {
       .findByIdAndUpdate(id, updateBrandDto, { new: true })
       .exec();
     if (!brand) {
-      throw new NotFoundException(`Product with ID "${id}" not found`);
+      throw new ApiError(`Product with ID "${id}" not found`, 404);
     }
     return brand;
   }
 
-  async deleteOne(id: string): Promise<void> {
-    await this.brandModel.findByIdAndDelete(id).exec();
+  async deleteOne(id: string) {
+    const brand = await this.brandModel.findByIdAndDelete(id).exec();
+    if (!document) {
+      throw new ApiError(`No document for this id ${id}`, 404);
+    }
+    return brand;
   }
 }

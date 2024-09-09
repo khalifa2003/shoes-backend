@@ -24,9 +24,8 @@ export class AddressController {
 
   @Post()
   async addAddress(@Req() req, @Body() createAddressDto: CreateAddressDto) {
-    const userId = req.user._id;
     const updatedUser = await this.addressService.addAddress(
-      userId,
+      req.user._id,
       createAddressDto,
     );
     return {
@@ -38,9 +37,8 @@ export class AddressController {
 
   @Delete(':addressId')
   async removeAddress(@Req() req, @Param('addressId') addressId: string) {
-    const userId = req.user._id;
     const updatedUser = await this.addressService.removeAddress(
-      userId,
+      req.user._id,
       addressId,
     );
     return {
@@ -52,8 +50,9 @@ export class AddressController {
 
   @Get()
   async getLoggedUserAddresses(@Req() req) {
-    const userId = req.user._id;
-    const addresses = await this.addressService.getLoggedUserAddresses(userId);
+    const addresses = await this.addressService.getLoggedUserAddresses(
+      req.user._id,
+    );
     return {
       status: 'success',
       message: 'Addresses Fetched Successfully.',

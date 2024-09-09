@@ -27,7 +27,10 @@ export class AddressService {
   }
 
   async getLoggedUserAddresses(userId: string) {
-    const user = await this.userModel.findById(userId).exec();
-    return user?.addresses || [];
+    const address = await this.userModel
+      .findById(userId)
+      .populate('addresses')
+      .exec();
+    return address;
   }
 }

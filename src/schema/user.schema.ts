@@ -49,7 +49,7 @@ export class User {
 
   @Prop({
     type: {
-      id: { type: Types.ObjectId },
+      _id: { type: Types.ObjectId, auto: true },
       alias: String,
       details: String,
       phone: String,
@@ -58,7 +58,14 @@ export class User {
     },
     default: [],
   })
-  addresses: Address[];
+  addresses: {
+    _id: Types.ObjectId;
+    alias: string;
+    details: string;
+    phone: string;
+    city: string;
+    postalCode: string;
+  }[];
 
   @Prop({ type: Date, default: Date.now() })
   createdAt: Date;

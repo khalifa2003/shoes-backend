@@ -3,11 +3,11 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateAddressDto {
   @IsNotEmpty()
   @IsString()
-  fname: string;
+  alias: string;
 
   @IsNotEmpty()
   @IsString()
-  lname: string;
+  details: string;
 
   @IsNotEmpty()
   @IsString()
@@ -24,10 +24,6 @@ export class CreateAddressDto {
   @IsNotEmpty()
   @IsString()
   country: string;
-
-  @IsNotEmpty()
-  @IsString()
-  state: string;
 
   @IsOptional()
   @IsString()

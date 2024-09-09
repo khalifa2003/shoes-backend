@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Cart, CartDocument } from '../../../schema/cart.schema';
@@ -6,6 +6,7 @@ import { Product } from 'src/schema/product.schema';
 import { AddToCart } from './dto/add-to-cart.dto';
 import { ObjectId } from 'mongodb';
 import { UpdateCartDto } from './dto/update-cart.dto';
+import { ApiError } from 'src/utils/api-error';
 
 @Injectable()
 export class CartService {
@@ -29,7 +30,7 @@ export class CartService {
   ): Promise<CartDocument> {
     const { productId } = addToCart;
     const product = await this.productModel.findById(productId);
-    if (!product) throw new NotFoundException('Product not found');
+    if (!product) throw new ApiError('Product not found', 404);
 
     let cart = await this.cartModel.findOne({ user: userId });
     if (!cart) {
@@ -62,7 +63,7 @@ export class CartService {
     const cart = await this.cartModel
       .findOne({ user: userId })
       .populate('cartItems.product');
-    if (!cart) throw new NotFoundException('Cart not found for user');
+    if (!cart) throw new ApiError('Cart not found for user', 404);
     return cart;
   }
 
@@ -75,13 +76,9 @@ export class CartService {
       { $pull: { cartItems: { _id: itemId } } },
       { new: true },
     );
-    if (!cart) throw new NotFoundException('Cart not found for user');
+    if (!cart) throw new ApiError('Cart not found for user', 404);
     this.calcTotalCartPrice(cart);
     return cart.save();
-  }
-
-  async clearCart(userId: string): Promise<void> {
-    await this.cartModel.findOneAndDelete({ user: userId });
   }
 
   async updateCartItemQuantity(
@@ -91,15 +88,19 @@ export class CartService {
   ): Promise<CartDocument> {
     const { quantity } = updateCartDto;
     const cart = await this.cartModel.findOne({ user: userId });
-    if (!cart) throw new NotFoundException('Cart not found for user');
+    if (!cart) throw new ApiError('Cart not found for user', 404);
 
     const itemIndex = cart.cartItems.findIndex(
       (item) => item._id.toString() === itemId,
     );
-    if (itemIndex === -1) throw new NotFoundException('Cart item not found');
+    if (itemIndex === -1) throw new ApiError('Cart item not found', 404);
 
     cart.cartItems[itemIndex].quantity = quantity;
     this.calcTotalCartPrice(cart);
     return cart.save();
+  }
+
+  async clearCart(userId: string): Promise<void> {
+    await this.cartModel.findOneAndDelete({ user: userId });
   }
 }

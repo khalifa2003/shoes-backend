@@ -22,11 +22,13 @@ export class BrandController {
   constructor(private readonly brandService: BrandService) {}
 
   @Get()
+  @HttpCode(200)
   async getBrands() {
     return this.brandService.findAll();
   }
 
   @Get('/:id')
+  @HttpCode(200)
   async getBrand(@Param('id') id: string) {
     return this.brandService.findOne(id);
   }
@@ -41,6 +43,7 @@ export class BrandController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.Manager)
+  @HttpCode(200)
   @Put('/:id')
   async updateBrand(@Param('id') id: string, @Body() body: UpdateBrandDto) {
     return this.brandService.updateOne(id, body);
@@ -51,6 +54,6 @@ export class BrandController {
   @Delete('/:id')
   @HttpCode(204)
   async deleteBrand(@Param('id') id: string) {
-    return this.brandService.deleteOne(id);
+    this.brandService.deleteOne(id);
   }
 }
