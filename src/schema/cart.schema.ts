@@ -20,6 +20,7 @@ export class Cart {
     quantity: number;
     color: string;
     price: number;
+    size: string;
   }[];
 
   @Prop()

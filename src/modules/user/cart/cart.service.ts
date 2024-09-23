@@ -28,7 +28,7 @@ export class CartService {
     userId: string,
     addToCart: AddToCart,
   ): Promise<CartDocument> {
-    const { productId } = addToCart;
+    const { productId, color, size } = addToCart;
     const product = await this.productModel.findById(productId);
     if (!product) throw new ApiError('Product not found', 404);
 
@@ -36,7 +36,7 @@ export class CartService {
     if (!cart) {
       cart = await this.cartModel.create({
         user: userId,
-        cartItems: [{ product: productId, price: product.price }],
+        cartItems: [{ product: productId, price: product.price, color, size }],
       });
     } else {
       const productIndex = cart.cartItems.findIndex(
@@ -50,7 +50,8 @@ export class CartService {
           product: new ObjectId(productId),
           price: product.price - (product.price * product.discount) / 100,
           quantity: 1,
-          color: '',
+          color: color,
+          size: size,
         });
       }
     }
@@ -63,7 +64,8 @@ export class CartService {
     const cart = await this.cartModel
       .findOne({ user: userId })
       .populate('cartItems.product');
-    if (!cart) throw new ApiError('Cart not found for user', 404);
+    if (!cart)
+      throw new ApiError(`There is no cart for this user id : ${userId}`, 404);
     return cart;
   }
 

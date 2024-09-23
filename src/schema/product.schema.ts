@@ -41,6 +41,9 @@ export class Product {
   @Prop({ type: [String] })
   colors: string[];
 
+  @Prop({ type: [{ size: String, quantity: Number }] })
+  sizes: { size: string; quantity: number }[];
+
   @Prop({ type: String, required: [true, 'Product Image cover is required'] })
   imageCover: string[];
 
