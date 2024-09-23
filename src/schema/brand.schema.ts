@@ -10,12 +10,6 @@ export class Brand {
   })
   name: string;
 
-  @Prop({
-    type: String,
-    lowercase: true,
-  })
-  slug: string;
-
   @Prop({ required: true })
   image: string;
 }
