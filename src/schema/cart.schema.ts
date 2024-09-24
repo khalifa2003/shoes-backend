@@ -8,10 +8,11 @@ export class Cart {
   @Prop([
     {
       _id: { type: Types.ObjectId, auto: true },
-      product: { type: Types.ObjectId, ref: 'Product' },
+      product: { type: Types.ObjectId, ref: 'Product', required: true },
       quantity: { type: Number, default: 1 },
       color: { type: String },
-      price: { type: Number },
+      price: { type: Number, required: true },
+      size: { type: String },
     },
   ])
   cartItems: {
@@ -23,13 +24,13 @@ export class Cart {
     size: string;
   }[];
 
-  @Prop()
+  @Prop({ type: Number })
   totalCartPrice: number;
 
-  @Prop()
+  @Prop({ type: Number })
   totalPriceAfterDiscount?: number;
 
-  @Prop({ type: Types.ObjectId, ref: 'User' })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   user: Types.ObjectId;
 }
 
@@ -40,4 +41,16 @@ CartSchema.virtual('populatedCartItems', {
   localField: 'cartItems.product',
   foreignField: '_id',
   justOne: false,
+});
+
+CartSchema.pre('save', function (next) {
+  if (this.cartItems && this.cartItems.length > 0) {
+    this.totalCartPrice = this.cartItems.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0,
+    );
+  } else {
+    this.totalCartPrice = 0;
+  }
+  next();
 });

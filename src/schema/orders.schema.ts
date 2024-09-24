@@ -8,10 +8,11 @@ export class Order {
 
   @Prop([
     {
-      product: { type: Types.ObjectId, ref: 'Product' },
-      quantity: Number,
-      color: String,
-      price: Number,
+      product: { type: Types.ObjectId, ref: 'Product', required: true },
+      quantity: { type: Number, required: true, min: 1 },
+      color: { type: String, required: true },
+      price: { type: Number, required: true },
+      size: { type: String, required: true },
     },
   ])
   cartItems: {
@@ -19,6 +20,7 @@ export class Order {
     quantity: number;
     color: string;
     price: number;
+    size: string;
   }[];
 
   @Prop({ type: Number, default: 0 })
@@ -26,13 +28,15 @@ export class Order {
 
   @Prop({
     type: {
-      details: String,
-      phone: String,
-      city: String,
-      postalCode: String,
+      alias: { type: String, required: true },
+      details: { type: String, required: true },
+      phone: { type: String, required: true },
+      city: { type: String, required: true },
+      postalCode: { type: String, required: true },
     },
   })
   shippingAddress: {
+    alias: string;
     details: string;
     phone: string;
     city: string;
@@ -42,7 +46,7 @@ export class Order {
   @Prop({ type: Number, default: 0 })
   shippingPrice: number;
 
-  @Prop({ type: Number })
+  @Prop({ type: Number, required: true })
   totalOrderPrice: number;
 
   @Prop({
@@ -56,15 +60,15 @@ export class Order {
   isPaid: boolean;
 
   @Prop({ type: Date })
-  paidAt: Date;
+  paidAt?: Date;
 
   @Prop({ type: Boolean, default: false })
   isDelivered: boolean;
 
   @Prop({ type: Date })
-  deliveredAt: Date;
+  deliveredAt?: Date;
 
-  @Prop({ type: Date, default: Date.now() })
+  @Prop({ type: Date, default: Date.now })
   createdAt: Date;
 }
 
@@ -81,5 +85,16 @@ OrderSchema.pre(/^find/, function (next) {
       path: 'cartItems.product',
       select: 'title images',
     });
+  next();
+});
+
+OrderSchema.pre('save', function (next) {
+  if (this.cartItems && this.cartItems.length > 0) {
+    const totalCartPrice = this.cartItems.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0,
+    );
+    this.totalOrderPrice = totalCartPrice + this.taxPrice + this.shippingPrice;
+  }
   next();
 });
