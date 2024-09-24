@@ -1,9 +1,10 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Product } from '../../schema/product.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { ApiError } from 'src/utils/api-error';
 
 @Injectable()
 export class ProductService {
@@ -54,13 +55,30 @@ export class ProductService {
   async findOne(id: string): Promise<Product> {
     const product = await this.productModel.findById(id).exec();
     if (!product) {
-      throw new NotFoundException(`Product with ID "${id}" not found`);
+      throw new ApiError(`Product with ID "${id}" not found`, 404);
     }
     return product;
   }
 
   async createOne(createProductDto: CreateProductDto): Promise<Product> {
-    const newProduct = new this.productModel(createProductDto);
+    const totalQuantity = createProductDto.variants.reduce((acc, variant) => {
+      const variantQuantity = variant.variants.reduce(
+        (sum, variantSize) => sum + variantSize.quantity,
+        0,
+      );
+      return acc + variantQuantity;
+    }, 0);
+    const images: string[] = createProductDto.variants.map(
+      (variant) => variant.images[0],
+    );
+    console.log(totalQuantity);
+    console.log(images);
+
+    const newProduct = new this.productModel({
+      ...createProductDto,
+      quantity: totalQuantity,
+      images,
+    });
     return newProduct.save();
   }
 
@@ -72,13 +90,16 @@ export class ProductService {
       .findByIdAndUpdate(id, updateProductDto, { new: true })
       .exec();
     if (!product) {
-      throw new NotFoundException(`Product with ID "${id}" not found`);
+      throw new ApiError(`Product with ID "${id}" not found`, 404);
     }
     return product;
   }
 
   async deleteOne(id: string): Promise<void> {
-    await this.productModel.findByIdAndDelete(id).exec();
+    const product = await this.productModel.findByIdAndDelete(id).exec();
+    if (!product) {
+      throw new ApiError(`Product with ID "${id}" not found`, 404);
+    }
   }
 
   async findBy(data): Promise<Product[]> {

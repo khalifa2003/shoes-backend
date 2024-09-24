@@ -34,10 +34,6 @@ export class ValidateProductPipe implements PipeTransform {
       );
     }
 
-    if (!value.quantity || value.quantity <= 0) {
-      throw new BadRequestException('Quantity must be a positive number.');
-    }
-
     return value;
   }
 }

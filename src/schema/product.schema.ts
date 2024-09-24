@@ -16,9 +16,6 @@ export class Product {
   })
   title: string;
 
-  @Prop({ type: String, required: true, lowercase: true })
-  slug: string;
-
   @Prop({ required: true })
   description: string;
 
@@ -38,18 +35,24 @@ export class Product {
   @Prop({
     type: [
       {
-        size: { type: Number, required: true },
         color: { type: String, required: true },
-        quantity: { type: Number, required: true },
         images: [{ type: String, required: true }],
+        variants: [
+          {
+            size: { type: Number, required: true },
+            quantity: { type: Number, required: true },
+          },
+        ],
       },
     ],
   })
   variants: {
-    size: number;
     color: string;
-    quantity: number;
     images: string[];
+    variants: {
+      size: number;
+      quantity: number;
+    }[];
   }[];
 
   @Prop({ type: Number, default: 0 })
@@ -113,16 +116,30 @@ ProductSchema.virtual('priceAfterDiscount').get(function () {
   return this.price;
 });
 
-ProductSchema.virtual('stock').get(function () {
-  const statuses = this.variants.map((variant) => {
-    if (variant.quantity === 0) return 'OUTOFSTOCK';
-    if (variant.quantity > 0 && variant.quantity <= 10) return 'LOWSTOCK';
-    return 'INSTOCK';
+ProductSchema.virtual('variants.variants.stock').get(function () {
+  return this.variants.map((variantColor) => {
+    return {
+      color: variantColor.color,
+      variants: variantColor.variants.map((variant) => {
+        const status =
+          variant.quantity === 0
+            ? 'OUTOFSTOCK'
+            : variant.quantity <= 10
+              ? 'LOWSTOCK'
+              : 'INSTOCK';
+        return {
+          ...variant,
+          stock: status,
+        };
+      }),
+    };
   });
+});
 
-  if (statuses.includes('LOWSTOCK')) return 'LOWSTOCK';
-  if (statuses.includes('INSTOCK')) return 'INSTOCK';
-  return 'OUTOFSTOCK';
+ProductSchema.virtual('stock').get(function () {
+  if (this.quantity > 10) return 'INSTOCK';
+  if (this.quantity == 0) return 'OUTOFSTOCK';
+  return 'LOWSTOCK';
 });
 
 // const setImageURL = (doc) => {
